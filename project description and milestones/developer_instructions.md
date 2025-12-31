@@ -40,6 +40,37 @@
   - Always add the project maintainer as a required reviewer
   - Do not merge without review approval
 
+### GitHub Progress Tracking
+
+- **Keep the corresponding project in GitHub up to date with progress.**
+  - Update project boards, milestones, or issues as you make progress
+  - Link pull requests to their corresponding milestones/issues
+  - Include pull request links in milestone/issue descriptions or comments
+  - Update issue status (In Progress, Review, Done) as work progresses
+
+**Best Practices:**
+- When creating a pull request, reference the milestone or issue number in the PR description
+  - Example: `Closes #42` or `Related to Milestone 2`
+- Add the PR link to the corresponding milestone/issue for easy tracking
+- Update milestone/issue status when PR is created, reviewed, or merged
+- Keep project boards synchronized with actual development progress
+
+**Example PR Description:**
+```
+## Description
+Implements JWT authentication utilities for Milestone 4.
+
+## Changes
+- Add JWT token creation and validation functions
+- Implement password hashing utilities
+- Add authentication service layer
+
+## Related
+- Milestone 4: Authentication & Security
+- Closes #42
+- Related to #43, #44
+```
+
 ## Commit Messages
 
 ### Commit Message Standards
@@ -114,4 +145,6 @@ changes
 - [ ] Documentation in `/docs` is updated if needed
 - [ ] Pull request has required reviewer assigned
 - [ ] PR description explains what was changed and why
+- [ ] PR is linked to corresponding milestone/issue in GitHub
+- [ ] GitHub project board/milestone is updated with progress
 
