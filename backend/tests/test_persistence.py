@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import os
 import time
 
 # Ensure models are registered on Base.metadata for create_all().
@@ -27,8 +26,9 @@ def _wait_for_db(engine: Engine, *, timeout_s: float = 15.0) -> None:
 
 
 def test_user_repository_create_and_get(tmp_path) -> None:
-    # Prefer Postgres if DATABASE_URL is configured (e.g. via docker-compose/.env).
-    database_url = os.getenv("DATABASE_URL") or f"sqlite:///{tmp_path / 'test.db'}"
+    # Keep unit tests hermetic and environment-independent:
+    # use SQLite by default (fast, no external services).
+    database_url = f"sqlite:///{tmp_path / 'test.db'}"
 
     settings = Settings(DATABASE_URL=database_url)
     engine = create_engine_from_settings(settings)

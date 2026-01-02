@@ -1,11 +1,9 @@
 from __future__ import annotations
 
-import os
-
 # Ensure models are registered on Base.metadata for create_all().
 import app.models  # noqa: F401  (import side-effects)
 from app.auth.password import hash_password
-from app.core.config import get_settings
+from app.core.config import Settings, get_settings
 from app.db import Base, get_db
 from app.db.session import create_engine_from_settings
 from app.main import create_app
@@ -15,23 +13,13 @@ from sqlalchemy import Engine
 from sqlalchemy.orm import Session, sessionmaker
 
 
-def _setup_test_settings() -> None:
-    os.environ.setdefault("APP_ENV", "test")
-    os.environ.setdefault("JWT_SECRET_KEY", "test-secret-key")
-    get_settings.cache_clear()
-
-
 def _make_sqlite_engine(tmp_path) -> Engine:
-    settings = get_settings()
     # Use file-based SQLite so multiple sessions can see the same DB state.
-    settings = settings.model_copy(
-        update={"DATABASE_URL": f"sqlite:///{tmp_path / 'db.sqlite'}"}
-    )
+    settings = Settings(DATABASE_URL=f"sqlite:///{tmp_path / 'db.sqlite'}")
     return create_engine_from_settings(settings)
 
 
 def test_login_success_and_me(tmp_path) -> None:
-    _setup_test_settings()
     engine = _make_sqlite_engine(tmp_path)
     Base.metadata.create_all(bind=engine)
 
@@ -73,7 +61,6 @@ def test_login_success_and_me(tmp_path) -> None:
 
 
 def test_login_wrong_password_returns_401(tmp_path) -> None:
-    _setup_test_settings()
     engine = _make_sqlite_engine(tmp_path)
     Base.metadata.create_all(bind=engine)
 
