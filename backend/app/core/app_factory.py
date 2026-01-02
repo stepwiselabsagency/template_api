@@ -7,6 +7,7 @@ from contextlib import asynccontextmanager
 import psycopg
 import redis
 from app.api.router import router as api_router
+from app.api.v1.router import v1_router
 from app.core.config import get_settings
 from app.core.logging import configure_logging
 from app.core.middleware import RequestIdMiddleware, RequestLoggingMiddleware
@@ -35,7 +36,7 @@ def _best_effort_wait_for_deps(*, database_url: str, redis_url: str) -> None:
         postgres_ok = True
         redis_ok = True
 
-        if database_url:
+        if database_url and database_url.startswith("postgres"):
             try:
                 dsn = _coerce_psycopg_dsn(database_url)
                 with psycopg.connect(dsn, connect_timeout=2):
@@ -92,6 +93,9 @@ def create_app() -> FastAPI:
     @app.get("/health")
     def health() -> dict[str, str]:
         return {"status": "ok"}
+
+    # Versioned public API baseline
+    app.include_router(v1_router)
 
     app.include_router(api_router, prefix=settings.API_PREFIX)
 
