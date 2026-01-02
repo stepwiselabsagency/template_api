@@ -17,9 +17,19 @@ class UserRepository(BaseRepository):
         return self.db.scalar(stmt)
 
     def create(
-        self, *, email: str, hashed_password: str, is_active: bool = True
+        self,
+        *,
+        email: str,
+        hashed_password: str,
+        is_active: bool = True,
+        is_superuser: bool = False,
     ) -> User:
-        user = User(email=email, hashed_password=hashed_password, is_active=is_active)
+        user = User(
+            email=email,
+            hashed_password=hashed_password,
+            is_active=is_active,
+            is_superuser=is_superuser,
+        )
         self.add(user)
         self.commit()
         self.refresh(user)
