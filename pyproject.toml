@@ -12,6 +12,8 @@ dependencies = [
   "pydantic-settings==2.6.1",
   "psycopg[binary]==3.2.3",
   "redis==5.0.8",
+  "SQLAlchemy==2.0.36",
+  "alembic==1.14.0",
 ]
 
 [project.optional-dependencies]
