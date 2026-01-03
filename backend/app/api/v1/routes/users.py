@@ -1,9 +1,13 @@
 from __future__ import annotations
 
+import json
 import uuid
 
 from app.api.v1.schemas.users import UserCreateRequest, UserPublic
 from app.auth.dependencies import get_current_user
+from app.core.cache.dependency import get_cache
+from app.core.cache.interface import Cache
+from app.core.config import get_settings
 from app.core.security import hash_password
 from app.db import get_db
 from app.models.user import User
@@ -57,6 +61,7 @@ def get_user(
     user_id: uuid.UUID,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
+    cache: Cache = Depends(get_cache),
 ) -> UserPublic:
     if current_user.id != user_id and not getattr(current_user, "is_superuser", False):
         raise HTTPException(
@@ -64,8 +69,25 @@ def get_user(
             detail="Not enough permissions",
         )
 
+    settings = get_settings()
+    cache_key = f"users:{user_id}"
+    cached = cache.get(cache_key) if settings.CACHE_ENABLED else None
+    if cached:
+        try:
+            data = json.loads(cached)
+            return UserPublic(**data)
+        except Exception:
+            # Fail open (cache corruption/unexpected value); fall back to DB.
+            pass
+
     repo = UserRepository(db)
     user = repo.get_by_id(user_id)
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="not found")
-    return _to_user_public(user)
+    public = _to_user_public(user)
+
+    if settings.CACHE_ENABLED:
+        ttl = min(int(settings.CACHE_DEFAULT_TTL_SECONDS), 60)
+        cache.set(cache_key, public.model_dump_json(), ttl_seconds=ttl)
+
+    return public

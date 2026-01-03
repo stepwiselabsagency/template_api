@@ -70,6 +70,20 @@ class Settings(BaseSettings):
 
     CORS_ALLOW_ORIGINS: list[str] = []
 
+    # --- Production hardening (optional; off by default) ---
+    RATE_LIMIT_ENABLED: bool = False
+    RATE_LIMIT_REQUESTS: int = 60
+    RATE_LIMIT_WINDOW_SECONDS: int = 60
+    RATE_LIMIT_KEY_STRATEGY: str = "ip"  # ip|user_or_ip
+    RATE_LIMIT_PREFIX: str = "rl:"
+
+    CACHE_ENABLED: bool = False
+    CACHE_DEFAULT_TTL_SECONDS: int = 300
+    CACHE_PREFIX: str = "cache:"
+
+    TELEMETRY_MODE: str = "noop"  # noop|log
+    TELEMETRY_SAMPLE_RATE: float = 1.0
+
     # --- Auth / JWT ---
     # Default is OK for local dev; must be overridden outside local/test.
     JWT_SECRET_KEY: str = "CHANGE_ME_IN_PROD"

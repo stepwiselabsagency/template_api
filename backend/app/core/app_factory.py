@@ -8,9 +8,15 @@ import psycopg
 import redis
 from app.api.router import router as api_router
 from app.api.v1.router import v1_router
+from app.core.cache import build_cache
 from app.core.config import get_settings
+from app.core.exception_handlers import register_exception_handlers
 from app.core.logging import configure_logging
 from app.core.middleware import RequestIdMiddleware, RequestLoggingMiddleware
+from app.core.rate_limit import build_rate_limiter
+from app.core.rate_limit.middleware import RateLimitMiddleware
+from app.core.telemetry import build_telemetry
+from app.core.telemetry_middleware import TelemetryMiddleware
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 
@@ -75,10 +81,19 @@ def create_app() -> FastAPI:
         lifespan=lifespan,
     )
 
+    # Hardening hooks (optional by settings; safe defaults)
+    app.state.telemetry = build_telemetry(settings)
+    app.state.cache = build_cache(settings)
+    app.state.rate_limiter = build_rate_limiter(settings)
+
+    register_exception_handlers(app)
+
     # Middleware order matters:
     # - CORS should be outermost (when enabled)
     # - request id runs before request logging so all logs get a request_id
+    app.add_middleware(RateLimitMiddleware, settings=settings)
     app.add_middleware(RequestLoggingMiddleware)
+    app.add_middleware(TelemetryMiddleware, settings=settings)
     app.add_middleware(RequestIdMiddleware, settings=settings)
 
     if settings.CORS_ALLOW_ORIGINS:
