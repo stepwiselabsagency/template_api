@@ -1,0 +1,44 @@
+name: sync-labels
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - ".github/labels.yml"
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install yq
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y yq
+
+      - name: Sync labels
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          labels_count=$(yq '.labels | length' .github/labels.yml)
+          echo "Found $labels_count labels"
+          for i in $(seq 0 $((labels_count-1))); do
+            name=$(yq -r ".labels[$i].name" .github/labels.yml)
+            color=$(yq -r ".labels[$i].color" .github/labels.yml)
+            desc=$(yq -r ".labels[$i].description" .github/labels.yml)
+
+            # create if missing, else update
+            if gh label list --limit 500 | awk '{print $1}' | grep -qx "$name"; then
+              gh label edit "$name" --color "$color" --description "$desc"
+              echo "Updated label: $name"
+            else
+              gh label create "$name" --color "$color" --description "$desc"
+              echo "Created label: $name"
+            fi
+          done

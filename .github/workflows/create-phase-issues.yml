@@ -1,0 +1,70 @@
+name: create-phase-issues
+
+on:
+  workflow_dispatch:
+    inputs:
+      phase:
+        description: "Phase folder name (e.g., phase02)"
+        required: true
+        default: "phase02"
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  create:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install gh
+        run: |
+          gh --version
+
+      - name: Create issues for phase
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PHASE: ${{ inputs.phase }}
+        run: |
+          set -euo pipefail
+
+          base=".github/phases/${PHASE}/issues"
+          if [ ! -d "$base" ]; then
+            echo "Missing phase issues directory: $base"
+            exit 1
+          fi
+
+          # Helper to create issue if not already exists by exact title
+          create_issue () {
+            local title="$1"
+            local labels="$2"
+            local bodyfile="$3"
+
+            if gh issue list --limit 200 --search "\"$title\" in:title" --json title | jq -e ".[] | select(.title==\"$title\")" >/dev/null; then
+              echo "Issue exists, skipping: $title"
+              return 0
+            fi
+
+            gh issue create \
+              --title "$title" \
+              --label "$labels" \
+              --body-file "$bodyfile"
+
+            echo "Created: $title"
+          }
+
+          # Epic
+          create_issue "phase02: epic — cleanup + restructure + heavy testing" "phase-02,epic" "$base/00_epic.md"
+
+          # Milestones 9–16
+          create_issue "phase02: milestone 09 — baseline lock & inventory" "phase-02,milestone" "$base/09_baseline_lock.md"
+          create_issue "phase02: milestone 10 — API surface consolidation" "phase-02,milestone,cleanup,breaking-change" "$base/10_api_consolidation.md"
+          create_issue "phase02: milestone 11 — restructure modules (production boundaries)" "phase-02,milestone,refactor" "$base/11_restructure.md"
+          create_issue "phase02: milestone 12 — middleware & error invariants hardening" "phase-02,milestone,testing" "$base/12_invariants.md"
+          create_issue "phase02: milestone 13 — black-box verification harness" "phase-02,milestone,testing" "$base/13_verifiers.md"
+          create_issue "phase02: milestone 14 — docker-compose smoke tests" "phase-02,milestone,testing,infra" "$base/14_smoke.md"
+          create_issue "phase02: milestone 15 — CI hardening (contracts + smoke)" "phase-02,milestone,ci" "$base/15_ci_hardening.md"
+          create_issue "phase02: milestone 16 — docs truth pass" "phase-02,milestone,docs" "$base/16_docs_truth.md"
+
+          echo "Done."

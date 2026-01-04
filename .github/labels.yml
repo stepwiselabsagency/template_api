@@ -1,0 +1,37 @@
+labels:
+  # phase labels (add phase-03 etc later)
+  - name: "phase-02"
+    color: "5319e7"
+    description: "Phase 02 work"
+
+  # types
+  - name: "epic"
+    color: "0e8a16"
+    description: "Epic tracking issue"
+  - name: "milestone"
+    color: "1d76db"
+    description: "Milestone issue"
+
+  # work kinds
+  - name: "cleanup"
+    color: "fbca04"
+    description: "Intentional deletion / cleanup"
+  - name: "refactor"
+    color: "c2e0c6"
+    description: "Refactor / restructure"
+  - name: "testing"
+    color: "b60205"
+    description: "Testing and verification"
+  - name: "docs"
+    color: "0075ca"
+    description: "Documentation-only changes"
+  - name: "ci"
+    color: "0052cc"
+    description: "CI / workflows"
+  - name: "infra"
+    color: "d4c5f9"
+    description: "Infra / compose / runtime environment"
+
+  - name: "breaking-change"
+    color: "e11d21"
+    description: "Expected breaking change"
