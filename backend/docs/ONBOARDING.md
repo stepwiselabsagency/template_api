@@ -3,7 +3,7 @@
 ## What is this template?
 
 - **FastAPI service skeleton** with a clear separation between **core platform** and **feature API routes**.
-- **Versioned API baseline** under **`/api/v1`** (plus **legacy/non-versioned** routes for compatibility).
+- **Canonical public API** under **`/api/v1`** (no parallel legacy route tree).
 - **Production-hardening hooks** (standard error model, request id, optional cache, optional rate limiting, optional telemetry).
 - **Docker Compose + Make** workflow for consistent local dev and CI parity.
 
@@ -33,13 +33,19 @@ From repo root:
 ```bash
 cp .env.example .env
 make up
-curl http://localhost:8000/health
+curl http://localhost:8000/api/v1/health/live
 ```
 
 Expected response (must remain stable):
 
 ```json
 {"status":"ok"}
+```
+
+Infra convenience (also available, stable):
+
+```bash
+curl http://localhost:8000/health
 ```
 
 Stop:
@@ -85,7 +91,6 @@ make precommit
 - **Middleware**: request id → telemetry → request logging → rate limiting (see `backend/docs/ARCHITECTURE.md`)
 - **Routing**:
   - **v1 routes**: `backend/app/api/v1/` mounted at `/api/v1`
-  - **legacy routes**: `backend/app/api/routes/` mounted at `settings.API_PREFIX` (default: empty string)
 - **Dependencies**:
   - DB session: `backend/app/db/session.py:get_db`
   - Auth: `backend/app/auth/dependencies.py:get_current_user`
@@ -108,12 +113,6 @@ make precommit
 - **Wire it into v1 router**: `backend/app/api/v1/router.py`
 - **Add/adjust schemas**: `backend/app/api/v1/schemas/<feature>.py`
 - **Add tests**: `backend/tests/test_v1_<feature>.py` or `backend/tests/integration/`
-
-### Add an endpoint (legacy / non-versioned)
-
-- **Add route module**: `backend/app/api/routes/<feature>.py`
-- **Wire it into legacy router**: `backend/app/api/router.py`
-- **Confirm mount**: `backend/app/core/app_factory.py` mounts `api_router` with `prefix=settings.API_PREFIX`
 
 ### Add a model + migration (SQLAlchemy + Alembic)
 

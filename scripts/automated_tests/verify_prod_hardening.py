@@ -47,7 +47,7 @@ def _assert(cond: bool, msg: str) -> None:
 def main() -> int:
     base_url = sys.argv[1] if len(sys.argv) > 1 else "http://localhost:8000"
 
-    # 1) Health (legacy)
+    # 1) Health (infra convenience)
     code, headers, body = _request("GET", f"{base_url}/health")
     _assert(code == 200, f"/health expected 200, got {code}")
     _assert(body.strip() == '{"status":"ok"}', f"/health body mismatch: {body!r}")
@@ -56,11 +56,23 @@ def main() -> int:
         "missing X-Request-ID",
     )
 
-    # 2) Readiness (v1)
+    # 2) Liveness (v1 canonical)
+    code, headers, body = _request("GET", f"{base_url}/api/v1/health/live")
+    _assert(code == 200, f"/api/v1/health/live expected 200, got {code}")
+    _assert(
+        body.strip() == '{"status":"ok"}',
+        f"/api/v1/health/live body mismatch: {body!r}",
+    )
+    _assert(
+        "x-request-id" in {k.lower() for k in headers.keys()},
+        "missing X-Request-ID",
+    )
+
+    # 3) Readiness (v1 canonical)
     code, _headers, body = _request("GET", f"{base_url}/api/v1/health/ready")
     _assert(code == 200, f"/api/v1/health/ready expected 200, got {code} body={body!r}")
 
-    # 3) Standard error schema (404)
+    # 4) Standard error schema (404)
     code, headers, body = _request("GET", f"{base_url}/api/v1/does-not-exist")
     _assert(code == 404, f"expected 404, got {code}")
     parsed = json.loads(body)
@@ -72,7 +84,7 @@ def main() -> int:
         "missing rate limit headers (enabled?)",
     )
 
-    # 4) Create user (v1) + login (legacy)
+    # 5) Create user (v1) + login (v1)
     email = f"verify-{uuid.uuid4()}@example.com"
     code, _headers, body = _request(
         "POST",
@@ -84,13 +96,13 @@ def main() -> int:
 
     code, _headers, body = _request(
         "POST",
-        f"{base_url}/auth/login",
+        f"{base_url}/api/v1/auth/login",
         form_body={"username": email, "password": "pass123"},
     )
     _assert(code == 200, f"expected 200 login, got {code} body={body!r}")
     token = json.loads(body)["access_token"]
 
-    # 5) Cache demo: GET /api/v1/users/{id} twice (server-side cache)
+    # 6) Cache demo: GET /api/v1/users/{id} twice (server-side cache)
     auth_headers = {"Authorization": f"Bearer {token}"}
     code, _headers, body1 = _request(
         "GET", f"{base_url}/api/v1/users/{user_id}", headers=auth_headers
@@ -101,7 +113,7 @@ def main() -> int:
     )
     _assert(code == 200, f"expected 200 get user (2nd), got {code} body={body2!r}")
 
-    # 6) Rate limiting: hit a v1 path until we see 429 (configured to 60 in env.example)
+    # 7) Rate limiting: hit a v1 path until we see 429 (configured to 60 in env.example)
     hit_429 = False
     for i in range(1, 80):
         code, headers, body = _request("GET", f"{base_url}/api/v1/does-not-exist")

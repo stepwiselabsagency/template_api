@@ -29,7 +29,7 @@ Minimal FastAPI backend template with:
 ```bash
 cp env.example .env
 make up
-curl http://localhost:8000/health
+curl http://localhost:8000/api/v1/health/live
 ```
 
 Expected (must remain stable):

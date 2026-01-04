@@ -13,8 +13,8 @@
 
 ## How it connects
 
-- Login endpoint is a **legacy route**:
-  - `backend/app/api/routes/auth.py` exposes `POST /auth/login` and `GET /auth/me`
+- Login endpoints are part of the canonical v1 API:
+  - `backend/app/api/v1/routes/auth.py` exposes `POST /api/v1/auth/login` and `GET /api/v1/auth/me`
 - Protected v1 routes depend on:
   - `Depends(get_current_user)` from `backend/app/auth/dependencies.py`
 

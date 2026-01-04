@@ -11,7 +11,6 @@
 - **Core platform**: `backend/app/core/`
 - **API routes**:
   - **v1**: `backend/app/api/v1/` (mounted at `/api/v1`)
-  - **legacy**: `backend/app/api/routes/` (mounted at `settings.API_PREFIX`, default: empty)
 - **Auth**: `backend/app/auth/`
 - **DB layer**: `backend/app/db/`
 - **Models**: `backend/app/models/`

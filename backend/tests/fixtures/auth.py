@@ -25,7 +25,7 @@ def auth_headers(client: TestClient, test_user) -> dict[str, str]:
     Log in as `test_user` and return Authorization headers.
     """
     res = client.post(
-        "/auth/login",
+        "/api/v1/auth/login",
         data={"username": test_user.email, "password": "pass123"},
         headers={"Content-Type": "application/x-www-form-urlencoded"},
     )

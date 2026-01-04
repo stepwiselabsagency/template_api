@@ -35,9 +35,9 @@ def test_user_flow_create_login_and_me(client: TestClient) -> None:
     user_id = created.json()["id"]
     assert created.headers.get("X-Request-ID")
 
-    # Login (legacy)
+    # Login (v1)
     login = client.post(
-        "/auth/login",
+        "/api/v1/auth/login",
         data={"username": "it-user@example.com", "password": "pass123"},
         headers={"Content-Type": "application/x-www-form-urlencoded"},
     )

@@ -26,10 +26,8 @@ flowchart LR
   App --> Middleware --> Routes[Routing]
 
   Routes --> V1[/api/v1 router\nbackend/app/api/v1/]
-  Routes --> Legacy[legacy router\nbackend/app/api/routes/]
 
   V1 --> Deps[Dependencies (Depends)]
-  Legacy --> Deps
 
   Deps --> Auth[get_current_user\nbackend/app/auth/dependencies.py]
   Deps --> DB[get_db\nbackend/app/db/session.py]
@@ -76,7 +74,7 @@ Notes:
     - `app.state.rate_limiter = build_rate_limiter(settings)`
   - Register exception handlers: `backend/app/core/exception_handlers.py:register_exception_handlers(app)`
   - Install middleware (ordering is intentional; see below)
-  - Include routers (`/api/v1` + legacy router)
+  - Include canonical public router (`/api/v1`)
   - Define `GET /health` at the root path
 
 **Where to change app-wide wiring:**
@@ -133,19 +131,17 @@ Where to change ordering:
 
 ---
 
-## Routing strategy: v1 routes vs legacy routes
+## Routing strategy: canonical `/api/v1`
 
 **Files:**
 
 - v1 router: `backend/app/api/v1/router.py` (mounted at `/api/v1`)
-- legacy router: `backend/app/api/router.py` (mounted at `settings.API_PREFIX`, default: empty)
-- legacy route modules: `backend/app/api/routes/`
 - v1 route modules: `backend/app/api/v1/routes/`
 
-Terminology used in this repo:
+Public API truth:
 
-- **v1 routes**: versioned endpoints under `/api/v1/*` (`backend/app/api/v1/`)
-- **legacy routes**: non-versioned endpoints (`backend/app/api/routes/`)
+- **Canonical public API** is under `/api/v1/*`.
+- `GET /health` exists as a minimal **infra convenience** liveness endpoint (not a parallel “legacy API surface”).
 
 Extension points:
 

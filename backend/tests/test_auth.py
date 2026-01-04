@@ -42,7 +42,7 @@ def test_login_success_and_me(tmp_path) -> None:
     client = TestClient(app)
 
     res = client.post(
-        "/auth/login",
+        "/api/v1/auth/login",
         data={"username": "test@example.com", "password": "pass123"},
         headers={"Content-Type": "application/x-www-form-urlencoded"},
     )
@@ -53,7 +53,7 @@ def test_login_success_and_me(tmp_path) -> None:
     assert body["expires_in"] == get_settings().JWT_ACCESS_TOKEN_EXPIRES_MINUTES * 60
 
     token = body["access_token"]
-    me = client.get("/auth/me", headers={"Authorization": f"Bearer {token}"})
+    me = client.get("/api/v1/auth/me", headers={"Authorization": f"Bearer {token}"})
     assert me.status_code == 200
     me_body = me.json()
     assert me_body["id"] == str(user.id)
@@ -82,7 +82,7 @@ def test_login_wrong_password_returns_401(tmp_path) -> None:
     client = TestClient(app)
 
     res = client.post(
-        "/auth/login",
+        "/api/v1/auth/login",
         data={"username": "test@example.com", "password": "wrong"},
         headers={"Content-Type": "application/x-www-form-urlencoded"},
     )
