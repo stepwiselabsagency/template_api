@@ -72,11 +72,17 @@ code within the same request.
 
 Middleware is installed in `app/core/app_factory.py`.
 
-The intended order is:
+Important Starlette behavior:
+
+- Middleware is applied in **reverse** order of `app.add_middleware(...)` calls.
+
+The effective order (outermost → innermost) is:
 
 - **CORS (outermost, optional)**: handles browser preflight and headers
 - **Request ID**: sets `request_id` early and returns it in the response header
-- **Request logging (inner)**: logs a single summary line at request end
+- **Telemetry**: records request metrics when enabled
+- **Request logging**: logs a single summary line at request end
+- **Rate limiting (inner, optional)**: applies only to `/api/v1/*` with health exemptions
 
 This ensures:
 
@@ -88,6 +94,7 @@ This ensures:
 - Keep middleware **small** and focused.
 - Prefer `app.add_middleware(...)` in the app factory so ordering is explicit.
 - If the middleware needs request correlation, read `request_id` from the logging context.
+- If you change ordering or scope rules, also update `backend/docs/ARCHITECTURE.md`.
 
 ---
 
