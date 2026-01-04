@@ -4,7 +4,7 @@ This template provides a minimal, security-minded authentication foundation:
 
 - **Password hashing**: `passlib[bcrypt]`
 - **Access tokens**: JWT (HS256) via `PyJWT`
-- **Login endpoint**: `POST /auth/login` (OAuth2 password flow)
+- **Login endpoint**: `POST /api/v1/auth/login` (OAuth2 password flow)
 - **Route protection**: `get_current_user()` dependency
 - **Minimal RBAC**: `is_superuser` on `users`, mapped to the `"admin"` role
 
@@ -21,7 +21,7 @@ Key source files:
 - `backend/app/auth/jwt.py`
 - `backend/app/auth/service.py`
 - `backend/app/auth/dependencies.py`
-- `backend/app/api/routes/auth.py`
+- `backend/app/api/v1/routes/auth.py`
 
 ## Password hashing
 
@@ -69,7 +69,7 @@ Clock skew:
 
 ## Login flow
 
-Endpoint: `POST /auth/login`
+Endpoint: `POST /api/v1/auth/login`
 
 - Uses `OAuth2PasswordRequestForm`
   - Content-Type: `application/x-www-form-urlencoded`
@@ -90,7 +90,7 @@ Response:
 Example:
 
 ```bash
-curl -i -X POST http://localhost:8000/auth/login \
+curl -i -X POST http://localhost:8000/api/v1/auth/login \
   -H "Content-Type: application/x-www-form-urlencoded" \
   -d "username=test@example.com&password=pass123"
 ```
@@ -108,8 +108,8 @@ Use:
 
 Example:
 
-- `GET /auth/me` is a minimal protected route implemented in
-  `backend/app/api/routes/auth.py`.
+- `GET /api/v1/auth/me` is a minimal protected route implemented in
+  `backend/app/api/v1/routes/auth.py`.
 
 ## Minimal RBAC
 
@@ -132,7 +132,7 @@ Example:
 - **JWT secret**: set a strong `JWT_SECRET_KEY` in production.
 - **Transport**: use HTTPS in real deployments (JWT bearer tokens must not travel over HTTP).
 - **Token storage**: prefer HTTP-only secure cookies or secure platform storage; avoid localStorage when possible.
-- **Rate limiting**: strongly recommended for `/auth/login` (future milestone).
+- **Rate limiting**: strongly recommended for `/api/v1/auth/login` (future milestone).
 - **Refresh tokens**: not included yet (future milestone).
 
 ## How to extend

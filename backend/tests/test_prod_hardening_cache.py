@@ -40,9 +40,9 @@ def test_cache_enabled_caches_get_user_by_id(
     assert res.status_code == 201
     user_id = res.json()["id"]
 
-    # Login (legacy)
+    # Login (v1)
     login = client.post(
-        "/auth/login",
+        "/api/v1/auth/login",
         data={"username": "test@example.com", "password": "pass123"},
         headers={"Content-Type": "application/x-www-form-urlencoded"},
     )

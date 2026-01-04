@@ -2,6 +2,10 @@
 
 This document is the **baseline truth** of Phase 01 for this repository. It is intentionally explicit and file-path driven so Phase 02 restructuring can proceed safely with **no runtime behavior changes**.
 
+Important:
+- This is a **Phase 01 snapshot**. In Phase 02, the canonical public API surface is `/api/v1/*` and duplicate legacy routes may be removed.
+- For the current canonical API surface, see: `backend/app/api/v1/README.md` and `backend/docs/ONBOARDING.md`.
+
 Scope rules:
 - **In scope**: current behavior as implemented in code/tests/docs in this repo.
 - **Out of scope**: Phase 02 planning, refactors, or “should” statements.
@@ -63,7 +67,6 @@ Services:
 Routing truth:
 - Root health is defined directly in `backend/app/core/app_factory.py` at `GET /health`.
 - Versioned API router is `backend/app/api/v1/router.py` mounted at `/api/v1` in `backend/app/core/app_factory.py`.
-- Legacy router is `backend/app/api/router.py` mounted at `prefix=settings.API_PREFIX` (default: empty string) in `backend/app/core/app_factory.py`.
 
 All endpoints below include **response header `X-Request-ID`** (default header name) due to `backend/app/core/middleware.py:RequestIdMiddleware`.
 
@@ -103,11 +106,11 @@ Mounted under `/api/v1` via `backend/app/api/v1/router.py`.
       - If `settings.REDIS_URL` is empty → treated as **ok** (readiness can still pass)
       - If `REDIS_URL` is configured but unreachable → readiness fails (`redis="error"`, status `503`)
 
-### Auth (legacy; non-versioned)
+### Auth (v1)
 
-Mounted from `backend/app/api/routes/auth.py` under prefix `/auth`.
+Mounted from `backend/app/api/v1/routes/auth.py` under `/api/v1/auth`.
 
-- **POST `/auth/login`**
+- **POST `/api/v1/auth/login`**
   - **Auth**: no
   - **Request**: `application/x-www-form-urlencoded` (`OAuth2PasswordRequestForm`)
     - fields: `username` (treated as email), `password`
@@ -115,9 +118,9 @@ Mounted from `backend/app/api/routes/auth.py` under prefix `/auth`.
   - **Response body shape**:
     - `{"access_token":"<jwt>","token_type":"bearer","expires_in":<int>}`
   - **Notes (truth from `backend/app/auth/dependencies.py`)**:
-    - Protected routes use `OAuth2PasswordBearer(tokenUrl="/auth/login")` (tokenUrl points to this legacy endpoint)
+    - Protected routes use `OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")`
 
-- **GET `/auth/me`**
+- **GET `/api/v1/auth/me`**
   - **Auth**: yes (Bearer token; `get_current_user`)
   - **Success**: `200`
   - **Response body shape**:
@@ -150,24 +153,6 @@ Mounted from `backend/app/api/v1/routes/users.py` under `/api/v1/users`.
     - Cache key: `users:{user_id}`
     - Stored value: JSON of `UserPublic`
     - TTL: `min(CACHE_DEFAULT_TTL_SECONDS, 60)`
-
-### Users (legacy; non-versioned)
-
-Mounted from `backend/app/api/routes/users.py` under `/users`.
-
-- **POST `/users`**
-  - **Auth**: no
-  - **Success**: `201`
-  - **Request body shape**: `{"email":"<str>","password":"<str>"}`
-  - **Response body shape**:
-    - `{"id":"<uuid>","email":"<str>","is_active":<bool>}`
-  - **Notes**:
-    - This is distinct from v1 user create: legacy responses do not include `is_superuser`.
-
-- **GET `/users/{user_id}`**
-  - **Auth**: no
-  - **Success**: `200`
-  - **Response body shape**: same as legacy create response (`id`, `email`, `is_active`)
 
 ---
 
@@ -306,9 +291,10 @@ Scripts live under `scripts/` and are not part of runtime app behavior.
   - `python scripts/automated_tests/verify_prod_hardening.py http://localhost:8000`
 - **What it verifies (truth from script)**:
   - `GET /health` returns `200` and body exactly `{"status":"ok"}`
+  - `GET /api/v1/health/live` returns `200`
   - `GET /api/v1/health/ready` returns `200`
   - `GET /api/v1/does-not-exist` returns `404` with standard error envelope and includes rate limit headers
-  - Can create a v1 user, then login via legacy `/auth/login`
+  - Can create a v1 user, then login via `/api/v1/auth/login`
   - Cache demo calls `GET /api/v1/users/{id}` twice
   - Rate limiting demo attempts to observe a `429` on a v1 path
 
@@ -323,7 +309,7 @@ Scripts live under `scripts/` and are not part of runtime app behavior.
 ## 9) Known limitations / intentional non-features (as currently documented/implemented)
 
 Truthful limitations in Phase 01 (confirmed in docs/code):
-- **Legacy + v1 coexist**: both `/api/v1/*` and non-versioned routes exist (see `backend/app/api/` and `backend/app/api/v1/`).
+- **Legacy + v1 coexist**: Phase 01 shipped both `/api/v1/*` and some non-versioned routes.
 - **Minimal RBAC**: `is_superuser` maps to `"admin"` (see `backend/docs/AUTH_MODEL.md` and `backend/app/auth/dependencies.py`).
 - **Refresh tokens not included**: explicitly stated as not included yet in `backend/docs/AUTH_MODEL.md`.
 

@@ -6,7 +6,6 @@ from contextlib import asynccontextmanager
 
 import psycopg
 import redis
-from app.api.router import router as api_router
 from app.api.v1.router import v1_router
 from app.core.cache import build_cache
 from app.core.config import get_settings
@@ -111,8 +110,6 @@ def create_app() -> FastAPI:
 
     # Versioned public API baseline
     app.include_router(v1_router)
-
-    app.include_router(api_router, prefix=settings.API_PREFIX)
 
     log.info("app created")
     return app

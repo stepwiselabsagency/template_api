@@ -2,6 +2,8 @@
 
 This directory defines the **versioned public API surface** for the template.
 
+**Canonical public API policy:** `/api/v1` is the authoritative public API surface.
+
 ## Why versioned routing?
 
 We expose new public endpoints under **`/api/v1`** so future breaking changes can be shipped under **`/api/v2`** without breaking existing clients.
@@ -9,16 +11,16 @@ We expose new public endpoints under **`/api/v1`** so future breaking changes ca
 - **v1**: `backend/app/api/v1/` (mounted at `/api/v1`)
 - **v2 (future)**: add `backend/app/api/v2/` and mount a new `v2_router = APIRouter(prefix="/api/v2")`
 
-Legacy (non-versioned) routes can remain at their current paths for backwards compatibility.
-
 ## Router layout
 
 - `backend/app/api/v1/router.py`
   - Defines `v1_router = APIRouter(prefix="/api/v1")`
   - Includes:
+    - `auth_router` (`/auth`)
     - `health_router` (`/health`)
     - `users_router` (`/users`)
 - `backend/app/api/v1/routes/`
+  - `auth.py`: login + current user
   - `health.py`: liveness/readiness
   - `users.py`: user endpoints
 - `backend/app/api/v1/schemas/`
@@ -34,6 +36,41 @@ Legacy (non-versioned) routes can remain at their current paths for backwards co
 Keep route modules small and keep shared models in `schemas/` to avoid circular imports.
 
 ## Endpoints
+
+### `POST /api/v1/auth/login`
+
+Issue an access token (OAuth2 password form).
+
+Request:
+
+- Content-Type: `application/x-www-form-urlencoded`
+- Fields:
+  - `username` (treated as email in this template)
+  - `password`
+
+Response (200):
+
+```json
+{"access_token":"<jwt>","token_type":"bearer","expires_in":3600}
+```
+
+Example:
+
+```bash
+curl -i -X POST http://localhost:8000/api/v1/auth/login \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "username=user@example.com&password=pass123"
+```
+
+### `GET /api/v1/auth/me`
+
+Return the current user (auth required).
+
+Response (200):
+
+```json
+{"id":"<uuid>","email":"user@example.com","is_active":true,"is_superuser":false}
+```
 
 ### `GET /api/v1/health/live`
 
@@ -123,17 +160,9 @@ Response (200):
 
 ## Auth usage (token)
 
-This template currently issues tokens from the **legacy** login endpoint:
+Get a token from:
 
-- `POST /auth/login` (OAuth2 password form)
-
-Example:
-
-```bash
-curl -i -X POST http://localhost:8000/auth/login \
-  -H "Content-Type: application/x-www-form-urlencoded" \
-  -d "username=user@example.com&password=pass123"
-```
+- `POST /api/v1/auth/login` (OAuth2 password form)
 
 Then call protected endpoints with:
 

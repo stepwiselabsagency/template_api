@@ -49,9 +49,9 @@ def test_v1_user_create_login_and_me(tmp_path) -> None:
     )
     assert dup.status_code == 409
 
-    # Login (legacy)
+    # Login (v1)
     login = client.post(
-        "/auth/login",
+        "/api/v1/auth/login",
         data={"username": "test@example.com", "password": "pass123"},
         headers={"Content-Type": "application/x-www-form-urlencoded"},
     )

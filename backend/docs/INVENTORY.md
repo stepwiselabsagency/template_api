@@ -51,14 +51,14 @@ Structured inventory (Phase 01 truth; “Deletion candidates?” is informationa
   - **Notes / Risks if removed**: Breaks contractual invariants (`/health` header behavior, standard errors, rate limit scope).
 
 - **Path**: `backend/app/api/`
-  - **Responsibility**: HTTP routing layer (legacy + v1 router composition).
+  - **Responsibility**: HTTP routing layer (canonical v1 public API under `/api/v1`).
   - **Key files**:
-    - `backend/app/api/router.py` (legacy router includes)
-    - `backend/app/api/routes/auth.py` (`/auth/*`)
-    - `backend/app/api/routes/users.py` (`/users/*`)
+    - `backend/app/api/v1/router.py`
+    - `backend/app/api/v1/routes/auth.py`
+    - `backend/app/api/v1/routes/users.py`
   - **Why it exists**: Keeps route modules small and separated from core wiring.
-  - **Deletion candidates?**: Maybe (parts)
-  - **Notes / Risks if removed**: Legacy clients (and `OAuth2PasswordBearer(tokenUrl="/auth/login")`) assume `/auth/login` exists.
+  - **Deletion candidates?**: No
+  - **Notes / Risks if removed**: Removing v1 routes breaks the canonical API surface.
 
 - **Path**: `backend/app/api/v1/`
   - **Responsibility**: Versioned public API surface under `/api/v1`.
@@ -78,7 +78,7 @@ Structured inventory (Phase 01 truth; “Deletion candidates?” is informationa
     - `backend/app/auth/service.py`
   - **Why it exists**: Keeps auth logic reusable across routes; enforces consistent `401` behavior.
   - **Deletion candidates?**: No
-  - **Notes / Risks if removed**: Breaks protected endpoints (`/auth/me`, `/api/v1/users/me`, `/api/v1/users/{id}`).
+  - **Notes / Risks if removed**: Breaks protected endpoints (`/api/v1/auth/me`, `/api/v1/users/me`, `/api/v1/users/{id}`).
 
 - **Path**: `backend/app/db/`
   - **Responsibility**: SQLAlchemy engine/session wiring + Base.
@@ -177,13 +177,8 @@ Structured inventory (Phase 01 truth; “Deletion candidates?” is informationa
 
 These are **candidates** to evaluate later; do not remove in Phase 01 baseline.
 
-- **Legacy routes under `backend/app/api/routes/`**
-  - Candidate: consolidate or retire legacy `/users/*` and/or legacy `/auth/*` after verifying no external clients depend on them.
-  - Risk: `/auth/login` is referenced by `OAuth2PasswordBearer(tokenUrl="/auth/login")` (`backend/app/auth/dependencies.py`).
-
-- **Duplicated “user create / get” APIs (legacy `/users/*` vs v1 `/api/v1/users/*`)**
-  - Candidate: eventually prefer the v1 surface and reduce duplication.
-  - Risk: different response models exist (legacy does not expose `is_superuser`).
+- **Legacy route tree removal**
+  - Candidate: already completed as part of Phase 02 API consolidation (canonical `/api/v1` only). Reintroducing a parallel legacy route tree is discouraged.
 
 - **Some docs may be redundant with baseline docs**
   - Candidate: later deduplicate overlapping explanations across `backend/docs/*` once Phase 02 structure is finalized.
