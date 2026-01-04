@@ -1,4 +1,4 @@
-.PHONY: up down logs fmt lint test precommit
+.PHONY: up down logs fmt lint test test-unit test-integration precommit
 .PHONY: db-upgrade db-downgrade db-revision
 
 # Prefer Docker Compose v2 (`docker compose`), fallback to legacy v1 (`docker-compose`).
@@ -26,6 +26,12 @@ lint:
 
 test:
 	python -m pytest -q
+
+test-unit:
+	python -m pytest -q backend/tests/unit
+
+test-integration:
+	python -m pytest -q backend/tests -m "not unit"
 
 precommit:
 	@if [ "$$OS" = "Windows_NT" ] || uname -s | grep -qE "MINGW|MSYS|CYGWIN"; then \
