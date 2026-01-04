@@ -1,5 +1,6 @@
 .PHONY: up down logs fmt lint test test-unit test-integration precommit
 .PHONY: db-upgrade db-downgrade db-revision
+.PHONY: verify-baseline
 
 # Prefer Docker Compose v2 (`docker compose`), fallback to legacy v1 (`docker-compose`).
 DC ?= $(shell \
@@ -49,3 +50,22 @@ db-downgrade:
 
 db-revision:
 	$(DC) exec -T app alembic -c backend/alembic.ini revision --autogenerate -m "$(msg)"
+
+verify-baseline:
+	$(MAKE) fmt
+	$(MAKE) lint
+	$(MAKE) test
+	@echo ""
+	@echo "Baseline verification complete."
+	@echo ""
+	@echo "Optional manual checks (do not run unless you have the stack up):"
+	@echo "  - If Docker Compose is running:"
+	@echo "      curl http://localhost:8000/health"
+	@echo "      curl http://localhost:8000/api/v1/health/live"
+	@echo "      curl -i http://localhost:8000/api/v1/health/ready"
+	@echo ""
+	@echo "  - Scenario / verifier scripts:"
+	@echo "      python scripts/automated_tests/verify_prod_hardening.py http://localhost:8000"
+	@echo ""
+	@echo "  - Export Docker Compose logs as JSON (if docker compose is running):"
+	@echo "      python scripts/docker_logs/export_docker_logs_json.py --compose-cmd \"docker compose\" --service app --tail 200 --format ndjson --out app-logs.ndjson"
