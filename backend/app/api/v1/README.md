@@ -85,7 +85,14 @@ Responses:
 - `409 Conflict` (email exists):
 
 ```json
-{"detail":"email already exists"}
+{
+  "error": {
+    "code": "conflict",
+    "message": "email already exists",
+    "request_id": "…",
+    "details": null
+  }
+}
 ```
 
 ### `GET /api/v1/users/me`
@@ -148,5 +155,10 @@ curl -i http://localhost:8000/api/v1/users/me \
   - `401`: missing/invalid token
   - `403`: authenticated but not allowed
   - `409`: conflict (email already exists)
+
+Related docs:
+
+- `backend/docs/ERROR_MODEL.md` (standard error envelope)
+- `backend/docs/ARCHITECTURE.md`
 
 

@@ -8,6 +8,13 @@ This template provides a minimal, security-minded authentication foundation:
 - **Route protection**: `get_current_user()` dependency
 - **Minimal RBAC**: `is_superuser` on `users`, mapped to the `"admin"` role
 
+Related docs:
+
+- `backend/docs/ONBOARDING.md`
+- `backend/docs/ARCHITECTURE.md`
+- `backend/docs/ERROR_MODEL.md` (standard error envelope + `WWW-Authenticate` preservation)
+- `backend/docs/PROD_HARDENING.md`
+
 Key source files:
 
 - `backend/app/auth/password.py`
